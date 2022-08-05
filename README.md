@@ -1,7 +1,7 @@
 # FilePicker-Native
 Android Native File Picker
 A simple and light weight library for picking any type of file without taking care of Android permission. 
-This librray used coroutines, Rx Java & so on. you can use it in Activity & Fragment whwre you want..
+This library used coroutines, Rx Java & so on. you can use it in Activity & Fragment where you want..
 
 Usage of this library :
 
@@ -22,11 +22,11 @@ Step 2. Add the dependency
 
       dependencies {
 	       
-              implementation 'com.github.akashwebapps:AksUtils:0.1.0'
+               implementation 'com.github.akashwebapps:FilePicker-Native:0.1'
 
 	}
 
-Now moving to codeing part here i have shown the usage of this library in Main Activity.
+Now moving to coding part here i have shown the usage of this library in Main Activity.
 
        lateinit var filePicker: FilePicker
        val TAG = "MainActivity"
@@ -54,7 +54,7 @@ Now moving to codeing part here i have shown the usage of this library in Main A
 
 
 
-// just pass the params to that functon onRequestPermissionsResult in filepicker Librray..
+// just pass the params to that function onRequestPermissionsResult in filePicker Library..
 
 
 
@@ -90,6 +90,6 @@ For selecting different file
 
 
 
-// Thats it.. Use and Enjoy.. Thanks
-Happy Coding
+// That's it.. Use and Enjoy.. Thanks
+🙏🙏🙏🙏 Happy Coding 🙏🙏🙏🙏
 
