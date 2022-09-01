@@ -268,38 +268,29 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
         var intent: Intent? = null
 
-        if (allowPickImage && allowPickVideo) {
-            permissions = Constant.storage_permission
-            if (filePickerHelper.isPermissionsAllowed(
-                    permissions,
-                    true,
-                    requestCameraPermissionCode
-                )
-            ) {
+        permissions = Constant.storage_permission
+        if (filePickerHelper.isPermissionsAllowed(
+                permissions,
+                true,
+                requestCameraPermissionCode
+            )
+        ) {
+            if (allowPickImage && allowPickVideo)
+            {
                 intent = Intent(Intent.ACTION_GET_CONTENT)
                 intent.addCategory(Intent.CATEGORY_OPENABLE)
                 intent.type = "image/* video/*"
                 intent.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
-            }
-        } else if (allowPickImage && !allowPickVideo) {
-            intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        } else if (!allowPickImage && allowPickVideo) {
-            permissions = Constant.storage_permission
-            if (filePickerHelper.isPermissionsAllowed(
-                    permissions,
-                    true,
-                    requestCameraPermissionCode
-                )
-            ) {
+            }else if (allowPickImage && !allowPickVideo) {
+                intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            } else if (!allowPickImage && allowPickVideo) {
                 intent = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
             }
+            intent?.let {
+                it.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
+                cameraOrGalleryActivityLauncher.launch(it)
+            }
         }
-
-        intent?.let {
-            it.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
-            cameraOrGalleryActivityLauncher.launch(it)
-        }
-
 
     }
 
