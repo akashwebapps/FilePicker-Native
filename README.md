@@ -22,7 +22,7 @@ Step 2. Add the dependency
 
       dependencies {
 	       
-               implementation 'com.github.akashwebapps:FilePicker-Native:0.1'
+               implementation 'com.github.akashwebapps:FilePicker-Native:1.1'
 
 	}
 
