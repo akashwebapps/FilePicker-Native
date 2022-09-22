@@ -409,20 +409,48 @@ class FilePicker(private val context: AppCompatActivity, private val application
             fileUri = result.uriContent
             queryFileUrl = result.getUriFilePath(context).toString()
 
-            if (queryFileUrl.isNotEmpty()) {
-                if (::onFileSelectedListener.isInitialized) {
-                    onFileSelectedListener.onFileSelectSuccess(queryFileUrl)
-                }
-            } else {
+
+
+            val exceptionHandler = CoroutineExceptionHandler { _, t ->
+                t.printStackTrace()
                 if (::onFileSelectedListener.isInitialized) {
                     onFileSelectedListener.onFileSelectFailure()
                 }
+                Toast.makeText(
+                    context,
+                    t.localizedMessage ?: context.getString(R.string.some_err),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
 
-        } else {
+            GlobalScope.launch(Dispatchers.Main + exceptionHandler) {
 
+                queryFileUrl =  context.compressImageFile(queryFileUrl, shouldOverride = false, fileUri!!)
+
+                if (queryFileUrl.isNotEmpty()) {
+                    if (::onFileSelectedListener.isInitialized) {
+                        onFileSelectedListener.onFileSelectSuccess(queryFileUrl)
+                    }
+                } else {
+                    if (::onFileSelectedListener.isInitialized) {
+                        onFileSelectedListener.onFileSelectFailure()
+                    }
+                }
+            }
+
+
+
+
+
+
+
+        } else {
             val exception = result.error
         }
+
+
+
+
     }
 
 }
