@@ -3,6 +3,7 @@ package com.andorid.filepicker
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -14,14 +15,19 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.FileProvider
 import com.andorid.filepicker.utils.Constant
 import com.andorid.filepicker.utils.Constant.MIME_TYPE_DOC_DOCX
 import com.andorid.filepicker.utils.Constant.MIME_TYPE_PDF
 import com.andorid.filepicker.utils.Constant.MIME_TYPE_TEXT
 import com.andorid.filepicker.utils.Constant.MIME_TYPE_XLS
+import com.andorid.filepicker.utils.ImageCompression
 import com.andorid.filepicker_native.utils.Exfn.Companion.openAppSystemSettings
 import com.andorid.filepicker.utils.compressImageFile
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageView
+import com.canhub.cropper.options
 import com.hbisoft.pickit.PickiT
 import com.hbisoft.pickit.PickiTCallbacks
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -34,7 +40,7 @@ import java.util.ArrayList
 
 interface ImagePickerContract {
     var filePickerHelper: FilePickerHelper
-    fun takePhotoFromCamera()
+    fun takePhotoFromCamera(shouldCrop: Boolean = false)
     fun pickFile(
         allowImage: Boolean = false,
         allowPickVideo: Boolean = false,
@@ -45,7 +51,7 @@ interface ImagePickerContract {
     )
 
     fun takeVideoFromCamera()
-    fun takeFromGallery(allowPickImage: Boolean = true, allowPickVideo: Boolean = false)
+    fun takeFromGallery(allowPickImage: Boolean = true, shouldCrop: Boolean = false, allowPickVideo: Boolean = false)
     fun setFileSelectedListener(listener: FilePicker.OnFileSelectedListener)
     fun onRequestPermissionsResult(
         requestCode: Int,
@@ -70,6 +76,11 @@ class FilePicker(private val context: AppCompatActivity, private val application
     override var filePickerHelper: FilePickerHelper = FilePickerHelper(context)
     private lateinit var onFileSelectedListener: OnFileSelectedListener
     private var cameraOrGalleryActivityLauncher: ActivityResultLauncher<Intent>
+
+    private var shouldCrop : Boolean =false
+
+
+
 
     init {
 
@@ -196,11 +207,21 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
 
 
-            if (mimeType.equals( "JPEG",true) ||mimeType.equals( "JPG",true) ||mimeType.equals( "PNG",true)){
-                queryFileUrl =  context.compressImageFile(
-                    queryFileUrl,
-                    shouldOverride = false,
-                    fileUri!!)
+            if (mimeType.equals( "JPEG",true) || mimeType.equals( "JPG",true) || mimeType.equals( "PNG",true)){
+                if (shouldCrop){
+                   cropImage.launch(
+                       options(uri = fileUri) {
+                           setGuidelines(CropImageView.Guidelines.ON)
+                           setOutputCompressFormat(Bitmap.CompressFormat.PNG)
+                       }
+                   )
+
+                    return@launch
+               }
+
+                queryFileUrl =  context.compressImageFile(queryFileUrl, shouldOverride = false, fileUri!!)
+
+
             }
 
 
@@ -224,8 +245,9 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
 
     // taking care of camera intent
-    override fun takePhotoFromCamera() {
+    override fun takePhotoFromCamera(shouldCrop: Boolean) {
         permissions = Constant.camera_storage_permission
+        this.shouldCrop=shouldCrop
         currentSelection = { takePhotoFromCamera() }
         if (filePickerHelper.isPermissionsAllowed(
                 permissions,
@@ -263,8 +285,9 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
     // taking care of gallery intent
     @SuppressLint("IntentReset")
-    override fun takeFromGallery(allowPickImage: Boolean, allowPickVideo: Boolean) {
+    override fun takeFromGallery(allowPickImage: Boolean, shouldCrop: Boolean, allowPickVideo: Boolean) {
         currentSelection = { takeFromGallery() }
+        this.shouldCrop=shouldCrop
 
         var intent: Intent? = null
 
@@ -281,7 +304,8 @@ class FilePicker(private val context: AppCompatActivity, private val application
                 intent.addCategory(Intent.CATEGORY_OPENABLE)
                 intent.type = "image/* video/*"
                 intent.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
-            }else if (allowPickImage && !allowPickVideo) {
+            }
+            else if (allowPickImage && !allowPickVideo) {
                 intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             } else if (!allowPickImage && allowPickVideo) {
                 intent = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
@@ -375,5 +399,30 @@ class FilePicker(private val context: AppCompatActivity, private val application
         cameraOrGalleryActivityLauncher.launch(Intent.createChooser(intent, "Choose File"))
     }
 
+
+    // FIXME: 22-09-2022
+
+    private val cropImage = context.registerForActivityResult(CropImageContract()) { result ->
+        if (result.isSuccessful) {
+            // use the returned uri
+
+            fileUri = result.uriContent
+            queryFileUrl = result.getUriFilePath(context).toString()
+
+            if (queryFileUrl.isNotEmpty()) {
+                if (::onFileSelectedListener.isInitialized) {
+                    onFileSelectedListener.onFileSelectSuccess(queryFileUrl)
+                }
+            } else {
+                if (::onFileSelectedListener.isInitialized) {
+                    onFileSelectedListener.onFileSelectFailure()
+                }
+            }
+
+        } else {
+
+            val exception = result.error
+        }
+    }
 
 }

@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
         //  filePicker.pickFile()
 
         // for selecting only pdf and image
-        filePicker.takeFromGallery()
+        filePicker.pickFile(allowPdf = true)
 
 
         // here you can define the file type as your need to let user choose..
