@@ -51,7 +51,12 @@ interface ImagePickerContract {
     )
 
     fun takeVideoFromCamera()
-    fun takeFromGallery(allowPickImage: Boolean = true, shouldCrop: Boolean = false, allowPickVideo: Boolean = false)
+    fun takeFromGallery(
+        allowPickImage: Boolean = true,
+        shouldCrop: Boolean = false,
+        allowPickVideo: Boolean = false
+    )
+
     fun setFileSelectedListener(listener: FilePicker.OnFileSelectedListener)
     fun onRequestPermissionsResult(
         requestCode: Int,
@@ -71,15 +76,13 @@ class FilePicker(private val context: AppCompatActivity, private val application
     private var fileUri: Uri? = null
     private lateinit var permissions: Array<String>
     private val requestCameraPermissionCode = 1000
-    private var cameraPermissionErrorString: String = "Permissions not grated"
+    private var cameraPermissionErrorString: String = "Permissions not granted"
 
     override var filePickerHelper: FilePickerHelper = FilePickerHelper(context)
     private lateinit var onFileSelectedListener: OnFileSelectedListener
     private var cameraOrGalleryActivityLauncher: ActivityResultLauncher<Intent>
 
-    private var shouldCrop : Boolean =false
-
-
+    private var shouldCrop: Boolean = false
 
 
     init {
@@ -207,19 +210,24 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
 
 
-            if (mimeType.equals( "JPEG",true) || mimeType.equals( "JPG",true) || mimeType.equals( "PNG",true)){
-                if (shouldCrop){
-                   cropImage.launch(
-                       options(uri = fileUri) {
-                           setGuidelines(CropImageView.Guidelines.ON)
-                           setOutputCompressFormat(Bitmap.CompressFormat.PNG)
-                       }
-                   )
+            if (mimeType.equals("JPEG", true) || mimeType.equals(
+                    "JPG",
+                    true
+                ) || mimeType.equals("PNG", true)
+            ) {
+                if (shouldCrop) {
+                    cropImage.launch(
+                        options(uri = fileUri) {
+                            setGuidelines(CropImageView.Guidelines.ON)
+                            setOutputCompressFormat(Bitmap.CompressFormat.PNG)
+                        }
+                    )
 
                     return@launch
-               }
+                }
 
-                queryFileUrl =  context.compressImageFile(queryFileUrl, shouldOverride = false, fileUri!!)
+                queryFileUrl =
+                    context.compressImageFile(queryFileUrl, shouldOverride = false, fileUri!!)
 
 
             }
@@ -247,7 +255,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
     // taking care of camera intent
     override fun takePhotoFromCamera(shouldCrop: Boolean) {
         permissions = Constant.camera_storage_permission
-        this.shouldCrop=shouldCrop
+        this.shouldCrop = shouldCrop
         currentSelection = { takePhotoFromCamera() }
         if (filePickerHelper.isPermissionsAllowed(
                 permissions,
@@ -285,9 +293,13 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
     // taking care of gallery intent
     @SuppressLint("IntentReset")
-    override fun takeFromGallery(allowPickImage: Boolean, shouldCrop: Boolean, allowPickVideo: Boolean) {
+    override fun takeFromGallery(
+        allowPickImage: Boolean,
+        shouldCrop: Boolean,
+        allowPickVideo: Boolean
+    ) {
         currentSelection = { takeFromGallery() }
-        this.shouldCrop=shouldCrop
+        this.shouldCrop = shouldCrop
 
         var intent: Intent? = null
 
@@ -298,22 +310,34 @@ class FilePicker(private val context: AppCompatActivity, private val application
                 requestCameraPermissionCode
             )
         ) {
-            if (allowPickImage && allowPickVideo)
-            {
-                intent = Intent(Intent.ACTION_GET_CONTENT)
-                intent.addCategory(Intent.CATEGORY_OPENABLE)
-                intent.type = "image/* video/*"
-                intent.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
-            }
-            else if (allowPickImage && !allowPickVideo) {
-                intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-            } else if (!allowPickImage && allowPickVideo) {
-                intent = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
-            }
-            intent?.let {
+
+            val mimeType = arrayListOf<String>()
+            if (allowPickImage) mimeType.add("image/*")
+            if (allowPickVideo) mimeType.add("video/*")
+
+            val type = mimeType.toTypedArray()
+
+            intent = Intent()
+            intent.type = TextUtils.join("|", type)
+            if (mimeType.size > 1) intent.putExtra(Intent.EXTRA_MIME_TYPES, type)
+            intent.action = Intent.ACTION_GET_CONTENT
+
+            intent.let {
                 it.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
                 cameraOrGalleryActivityLauncher.launch(it)
             }
+
+//            if (allowPickImage && allowPickVideo) { intent = Intent(Intent.ACTION_GET_CONTENT)
+//                intent.addCategory(Intent.CATEGORY_OPENABLE)
+//                intent.type = "image/* video/*"
+//                intent.putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
+//            }
+//            else if (allowPickImage && !allowPickVideo) {
+//                intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+//            } else if (!allowPickImage && allowPickVideo) {
+//                intent = Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
+//            }
+
         }
 
     }
@@ -410,7 +434,6 @@ class FilePicker(private val context: AppCompatActivity, private val application
             queryFileUrl = result.getUriFilePath(context).toString()
 
 
-
             val exceptionHandler = CoroutineExceptionHandler { _, t ->
                 t.printStackTrace()
                 if (::onFileSelectedListener.isInitialized) {
@@ -425,7 +448,8 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
             GlobalScope.launch(Dispatchers.Main + exceptionHandler) {
 
-                queryFileUrl =  context.compressImageFile(queryFileUrl, shouldOverride = false, fileUri!!)
+                queryFileUrl =
+                    context.compressImageFile(queryFileUrl, shouldOverride = false, fileUri!!)
 
                 if (queryFileUrl.isNotEmpty()) {
                     if (::onFileSelectedListener.isInitialized) {
@@ -439,16 +463,9 @@ class FilePicker(private val context: AppCompatActivity, private val application
             }
 
 
-
-
-
-
-
         } else {
             val exception = result.error
         }
-
-
 
 
     }
