@@ -36,10 +36,10 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun onClickButton(view: View) {
+    fun onClickCameraButton(view: View) {
 
         // for taking image from camera
-        //  filePicker.takePhotoFromCamera()
+          filePicker.takePhotoFromCamera()
 
         // for taking video from camera
         //  filePicker.takeVideoFromCamera()
@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
         //  filePicker.pickFile()
 
         // for selecting only pdf and image
-        filePicker.takeFromGallery(shouldCrop = true, allowPickVideo = true)
+       // filePicker.takeFromGallery(shouldCrop = true, allowPickVideo = true)
 
 
         // here you can define the file type as your need to let user choose..
@@ -66,6 +66,9 @@ class MainActivity : AppCompatActivity() {
         filePicker.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
+    fun onClickGalleryButton(view: View) {
+        filePicker.takeFromGallery()
+    }
 
 
 }

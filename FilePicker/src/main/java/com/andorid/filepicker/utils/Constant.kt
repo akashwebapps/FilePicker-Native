@@ -1,11 +1,11 @@
 package com.andorid.filepicker.utils
 
 import android.Manifest
+import android.os.Build
 
-object Constant{
+object Constant {
 
     val TAG = "AkashUtilsClass"
-
 
 
     val MIME_TYPE_IMAGE = "image/jpeg"
@@ -19,18 +19,27 @@ object Constant{
     val MIME_TYPE_WAV_AUDIO = "audio/x-wav"
 
 
-     val camera_storage_permission = arrayOf(
+    val camera_storage_permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(
+            Manifest.permission.READ_MEDIA_IMAGES,
+            Manifest.permission.READ_MEDIA_VIDEO,
+            Manifest.permission.CAMERA,
+        )
+    } else arrayOf(
         Manifest.permission.CAMERA,
         Manifest.permission.WRITE_EXTERNAL_STORAGE,
         Manifest.permission.READ_EXTERNAL_STORAGE
     )
 
-     val storage_permission = arrayOf(
+    val storage_permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(
+            Manifest.permission.READ_MEDIA_IMAGES,
+            Manifest.permission.READ_MEDIA_VIDEO
+        )
+    } else arrayOf(
         Manifest.permission.WRITE_EXTERNAL_STORAGE,
         Manifest.permission.READ_EXTERNAL_STORAGE
     )
-
-
 
 
 }
