@@ -11,27 +11,31 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
 
 
-    lateinit var filePicker: FilePicker
     val TAG = "MainActivity"
+
+
+    private lateinit var filePicker : FilePicker
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         filePicker = FilePicker(this, packageName)
-        filePicker.setFileSelectedListener(object : FilePicker.OnFileSelectedListener {
-            override fun onFileSelectSuccess(filePath: String) {
 
-                Log.d("handleImageRequest", "fileSizeAfterCompress: ${File(filePath).sizeInKb}")
-                Log.d(TAG, "onFileSelectSuccess: $filePath")
 
-            }
+        /* filePicker.setFileSelectedListener(object : FilePicker.OnFileSelectedListener {
+             override fun onFileSelectSuccess(filePath: String) {
 
-            override fun onFileSelectFailure() {
+                 Log.d("handleImageRequest", "fileSizeAfterCompress: ${File(filePath).sizeInKb}")
+                 Log.d(TAG, "onFileSelectSuccess: $filePath")
 
-                Log.d(TAG, "onFileSelectSuccess: Failed")
+             }
 
-            } })
+             override fun onFileSelectFailure() {
+
+                 Log.d(TAG, "onFileSelectSuccess: Failed")
+
+             } })*/
 
 
     }
@@ -39,8 +43,9 @@ class MainActivity : AppCompatActivity() {
     fun onClickCameraButton(view: View) {
 
         // for taking image from camera
-          filePicker.takePhotoFromCamera()
-
+        filePicker.takePhotoFromCamera(filePath = {
+            Log.d(TAG, "onFileSelectSuccess: $it")
+        })
         // for taking video from camera
         //  filePicker.takeVideoFromCamera()
 
@@ -52,7 +57,7 @@ class MainActivity : AppCompatActivity() {
         //  filePicker.pickFile()
 
         // for selecting only pdf and image
-       // filePicker.takeFromGallery(shouldCrop = true, allowPickVideo = true)
+        // filePicker.takeFromGallery(shouldCrop = true, allowPickVideo = true)
 
 
         // here you can define the file type as your need to let user choose..
@@ -61,13 +66,19 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         filePicker.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     fun onClickGalleryButton(view: View) {
-        filePicker.takeFromGallery()
+        filePicker.takeFromGallery(filePath = {
+            Log.d(TAG, "onFileSelectSuccess: $it")
+        })
     }
 
 

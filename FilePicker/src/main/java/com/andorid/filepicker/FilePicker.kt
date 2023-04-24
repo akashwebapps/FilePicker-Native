@@ -40,28 +40,28 @@ import java.util.ArrayList
 
 interface ImagePickerContract {
     var filePickerHelper: FilePickerHelper
-    fun takePhotoFromCamera(shouldCrop: Boolean = false)
+    fun takePhotoFromCamera(shouldCrop: Boolean = false, filePath: (path: String) -> Unit)
     fun pickFile(
         allowImage: Boolean = false,
         allowPickVideo: Boolean = false,
         allowPdf: Boolean = false,
         allowDoc: Boolean = false,
         allowXCL: Boolean = false,
-        allowText: Boolean = false
+        allowText: Boolean = false,
+        filePath: (path: String) -> Unit
     )
 
-    fun takeVideoFromCamera()
+    fun takeVideoFromCamera(filePath: (path: String) -> Unit)
     fun takeFromGallery(
         allowPickImage: Boolean = true,
         shouldCrop: Boolean = false,
-        allowPickVideo: Boolean = false
+        allowPickVideo: Boolean = false,
+        filePath: (path: String) -> Unit
     )
 
     fun setFileSelectedListener(listener: FilePicker.OnFileSelectedListener)
     fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     )
 }
 
@@ -84,6 +84,8 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
     private var shouldCrop: Boolean = false
 
+
+    private var onSelectedFile: ((filePath: String) -> Unit)? = null
 
     init {
 
@@ -115,9 +117,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
             }
 
             override fun PickiTonMultipleCompleteListener(
-                paths: ArrayList<String>?,
-                wasSuccessful: Boolean,
-                Reason: String?
+                paths: ArrayList<String>?, wasSuccessful: Boolean, Reason: String?
             ) {
 
             }
@@ -147,16 +147,13 @@ class FilePicker(private val context: AppCompatActivity, private val application
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
         when (requestCode) {
             requestCameraPermissionCode -> {
                 if (filePickerHelper.isAllPermissionsGranted(grantResults)) {
                     currentSelection?.invoke()
-                } else {
-                    /* Toast.makeText(
+                } else {/* Toast.makeText(
                          context,
                          cameraPermissionErrorString,
                          Toast.LENGTH_SHORT
@@ -211,17 +208,14 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
 
             if (mimeType.equals("JPEG", true) || mimeType.equals(
-                    "JPG",
-                    true
+                    "JPG", true
                 ) || mimeType.equals("PNG", true)
             ) {
                 if (shouldCrop) {
-                    cropImage.launch(
-                        options(uri = fileUri) {
-                            setGuidelines(CropImageView.Guidelines.ON)
-                            setOutputCompressFormat(Bitmap.CompressFormat.PNG)
-                        }
-                    )
+                    cropImage.launch(options(uri = fileUri) {
+                        setGuidelines(CropImageView.Guidelines.ON)
+                        setOutputCompressFormat(Bitmap.CompressFormat.PNG)
+                    })
 
                     return@launch
                 }
@@ -235,13 +229,14 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
 
             if (queryFileUrl.isNotEmpty()) {
-                if (::onFileSelectedListener.isInitialized) {
-                    onFileSelectedListener.onFileSelectSuccess(queryFileUrl)
-                }
+                onSelectedFile?.invoke(queryFileUrl)
+                /*  if (::onFileSelectedListener.isInitialized) {
+                      onFileSelectedListener.onFileSelectSuccess(queryFileUrl)
+                  }*/
             } else {
-                if (::onFileSelectedListener.isInitialized) {
+                /*if (::onFileSelectedListener.isInitialized) {
                     onFileSelectedListener.onFileSelectFailure()
-                }
+                }*/
             }
         }
     }
@@ -253,14 +248,13 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
 
     // taking care of camera intent
-    override fun takePhotoFromCamera(shouldCrop: Boolean) {
+    override fun takePhotoFromCamera(shouldCrop: Boolean, filePath: (path: String) -> Unit) {
         permissions = Constant.camera_storage_permission
         this.shouldCrop = shouldCrop
-        currentSelection = { takePhotoFromCamera() }
+        this.onSelectedFile = filePath
+        currentSelection = { takePhotoFromCamera(shouldCrop, filePath) }
         if (filePickerHelper.isPermissionsAllowed(
-                permissions,
-                true,
-                requestCameraPermissionCode
+                permissions, true, requestCameraPermissionCode
             )
         ) {
             captureImageFromCamera()
@@ -278,13 +272,10 @@ class FilePicker(private val context: AppCompatActivity, private val application
         folder.mkdirs()
 
         val file = File(folder, "image_tmp.jpg")
-        if (file.exists())
-            file.delete()
+        if (file.exists()) file.delete()
         file.createNewFile()
         fileUri = FileProvider.getUriForFile(
-            context,
-            applicationId + context.getString(R.string.file_provider_name),
-            file
+            context, applicationId + context.getString(R.string.file_provider_name), file
         )
         filePath = file.absolutePath
         return fileUri!!
@@ -296,18 +287,17 @@ class FilePicker(private val context: AppCompatActivity, private val application
     override fun takeFromGallery(
         allowPickImage: Boolean,
         shouldCrop: Boolean,
-        allowPickVideo: Boolean
+        allowPickVideo: Boolean,
+        filePath: (path: String) -> Unit
     ) {
-        currentSelection = { takeFromGallery() }
+        currentSelection = { takeFromGallery(allowPickImage, shouldCrop, allowPickVideo, filePath) }
         this.shouldCrop = shouldCrop
-
+        this.onSelectedFile = filePath
         var intent: Intent? = null
 
         permissions = Constant.storage_permission
         if (filePickerHelper.isPermissionsAllowed(
-                permissions,
-                true,
-                requestCameraPermissionCode
+                permissions, true, requestCameraPermissionCode
             )
         ) {
 
@@ -344,13 +334,12 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
 
     // taking care of gallery intent for video
-    override fun takeVideoFromCamera() {
+    override fun takeVideoFromCamera(filePath: (path: String) -> Unit) {
         permissions = Constant.camera_storage_permission
-        currentSelection = { takeVideoFromCamera() }
+        currentSelection = { takeVideoFromCamera(filePath) }
+        this.onSelectedFile = filePath
         if (filePickerHelper.isPermissionsAllowed(
-                permissions,
-                true,
-                requestCameraPermissionCode
+                permissions, true, requestCameraPermissionCode
             )
         ) {
             captureVideoFromCamera()
@@ -370,23 +359,28 @@ class FilePicker(private val context: AppCompatActivity, private val application
         allowPdf: Boolean,
         allowDoc: Boolean,
         allowXCL: Boolean,
-        allowText: Boolean
+        allowText: Boolean,
+        filePath: (path: String) -> Unit
     ) {
         permissions = Constant.storage_permission
-        currentSelection = { pickFile() }
-        if (filePickerHelper.isPermissionsAllowed(
-                permissions,
-                true,
-                requestCameraPermissionCode
-            )
-        ) {
-            pickDocument(
+        currentSelection = {
+            pickFile(
                 allowImage,
                 allowPickVideo,
                 allowPdf,
                 allowDoc,
                 allowXCL,
-                allowText
+                allowText,
+                filePath
+            )
+        }
+        this.onSelectedFile = filePath
+        if (filePickerHelper.isPermissionsAllowed(
+                permissions, true, requestCameraPermissionCode
+            )
+        ) {
+            pickDocument(
+                allowImage, allowPickVideo, allowPdf, allowDoc, allowXCL, allowText
             )
         }
     }
@@ -452,13 +446,14 @@ class FilePicker(private val context: AppCompatActivity, private val application
                     context.compressImageFile(queryFileUrl, shouldOverride = false, fileUri!!)
 
                 if (queryFileUrl.isNotEmpty()) {
-                    if (::onFileSelectedListener.isInitialized) {
+                    onSelectedFile?.invoke(queryFileUrl)
+                    /*if (::onFileSelectedListener.isInitialized) {
                         onFileSelectedListener.onFileSelectSuccess(queryFileUrl)
-                    }
+                    }*/
                 } else {
-                    if (::onFileSelectedListener.isInitialized) {
+                    /*if (::onFileSelectedListener.isInitialized) {
                         onFileSelectedListener.onFileSelectFailure()
-                    }
+                    }*/
                 }
             }
 
