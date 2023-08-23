@@ -40,7 +40,13 @@ import java.util.ArrayList
 
 interface ImagePickerContract {
     var filePickerHelper: FilePickerHelper
-    fun takePhotoFromCamera(shouldCrop: Boolean = false, isCropBoxOval: Boolean = false,  filePath: (path: String) -> Unit)
+    fun takePhotoFromCamera(
+        shouldCrop: Boolean = false,
+        isCropBoxOval: Boolean = false,
+        cropBoxRatio: Pair<Int, Int>? = null,
+        filePath: (path: String) -> Unit
+    )
+
     fun pickFile(
         allowImage: Boolean = false,
         allowPickVideo: Boolean = false,
@@ -56,6 +62,7 @@ interface ImagePickerContract {
         allowPickImage: Boolean = true,
         shouldCrop: Boolean = false,
         isCropBoxOval: Boolean = false,
+        cropBoxRatio: Pair<Int, Int>? = null,
         allowPickVideo: Boolean = false,
         filePath: (path: String) -> Unit
     )
@@ -85,9 +92,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
     private var shouldCrop: Boolean = false
     private var isCropBoxOval: Boolean = false
-
-
-
+    private var cropBoxRatio: Pair<Int, Int>? = null
 
 
     private var onSelectedFile: ((filePath: String) -> Unit)? = null
@@ -220,7 +225,10 @@ class FilePicker(private val context: AppCompatActivity, private val application
                     cropImage.launch(options(uri = fileUri) {
                         setGuidelines(CropImageView.Guidelines.ON)
                         setOutputCompressFormat(Bitmap.CompressFormat.PNG)
-                       if (isCropBoxOval) setCropShape(cropShape = CropImageView.CropShape.OVAL)
+                        if (isCropBoxOval) setCropShape(cropShape = CropImageView.CropShape.OVAL)
+                        cropBoxRatio?.let {
+                            setAspectRatio(it.first, it.second)
+                        }
                     })
 
                     return@launch
@@ -254,12 +262,19 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
 
     // taking care of camera intent
-    override fun takePhotoFromCamera(shouldCrop: Boolean, isCropBoxOval: Boolean, filePath: (path: String) -> Unit) {
+    override fun takePhotoFromCamera(
+        shouldCrop: Boolean,
+        isCropBoxOval: Boolean,
+        cropBoxRatio: Pair<Int, Int>?,
+        filePath: (path: String) -> Unit
+    ) {
         permissions = Constant.camera_storage_permission
         this.shouldCrop = shouldCrop
         this.isCropBoxOval = isCropBoxOval
+        this.cropBoxRatio = cropBoxRatio
         this.onSelectedFile = filePath
-        currentSelection = { takePhotoFromCamera(shouldCrop,isCropBoxOval, filePath) }
+        currentSelection =
+            { takePhotoFromCamera(shouldCrop, isCropBoxOval, cropBoxRatio, filePath) }
         if (filePickerHelper.isPermissionsAllowed(
                 permissions, true, requestCameraPermissionCode
             )
@@ -295,12 +310,24 @@ class FilePicker(private val context: AppCompatActivity, private val application
         allowPickImage: Boolean,
         shouldCrop: Boolean,
         isCropBoxOval: Boolean,
+        cropBoxRatio: Pair<Int, Int>?,
         allowPickVideo: Boolean,
         filePath: (path: String) -> Unit
     ) {
-        currentSelection = { takeFromGallery(allowPickImage, shouldCrop,isCropBoxOval, allowPickVideo, filePath) }
+        currentSelection =
+            {
+                takeFromGallery(
+                    allowPickImage,
+                    shouldCrop,
+                    isCropBoxOval,
+                    cropBoxRatio,
+                    allowPickVideo,
+                    filePath
+                )
+            }
         this.shouldCrop = shouldCrop
         this.isCropBoxOval = isCropBoxOval
+        this.cropBoxRatio = cropBoxRatio
         this.onSelectedFile = filePath
         var intent: Intent? = null
 
