@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
     fun onClickCameraButton(view: View) {
 
         // for taking image from camera
-        filePicker.takePhotoFromCamera(filePath = {
+        filePicker.takePhotoFromCamera(shouldCrop = true, isCropBoxOval = true, filePath = {
             Log.d(TAG, "onFileSelectSuccess: $it")
         })
         // for taking video from camera
@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onClickGalleryButton(view: View) {
-        filePicker.takeFromGallery(filePath = {
+        filePicker.takeFromGallery(shouldCrop = true, isCropBoxOval = true, filePath = {
             Log.d(TAG, "onFileSelectSuccess: $it")
         })
     }
