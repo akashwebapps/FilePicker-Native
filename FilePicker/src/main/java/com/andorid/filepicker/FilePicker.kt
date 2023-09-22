@@ -20,6 +20,7 @@ import androidx.core.content.FileProvider
 import com.andorid.filepicker.utils.Constant
 import com.andorid.filepicker.utils.Constant.MIME_TYPE_DOC_DOCX
 import com.andorid.filepicker.utils.Constant.MIME_TYPE_PDF
+import com.andorid.filepicker.utils.Constant.MIME_TYPE_PPT_PPTX
 import com.andorid.filepicker.utils.Constant.MIME_TYPE_TEXT
 import com.andorid.filepicker.utils.Constant.MIME_TYPE_XLS
 import com.andorid.filepicker.utils.ImageCompression
@@ -54,6 +55,7 @@ interface ImagePickerContract {
         allowDoc: Boolean = false,
         allowXCL: Boolean = false,
         allowText: Boolean = false,
+        allowPpt: Boolean = false,
         filePath: (path: String) -> Unit
     )
 
@@ -396,6 +398,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
         allowDoc: Boolean,
         allowXCL: Boolean,
         allowText: Boolean,
+        allowPpt: Boolean,
         filePath: (path: String) -> Unit
     ) {
         permissions = Constant.storage_permission
@@ -407,6 +410,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
                 allowDoc,
                 allowXCL,
                 allowText,
+                allowPpt,
                 filePath
             )
         }
@@ -416,7 +420,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
             )
         ) {
             pickDocument(
-                allowImage, allowPickVideo, allowPdf, allowDoc, allowXCL, allowText
+                allowImage, allowPickVideo, allowPdf, allowDoc, allowXCL, allowText,allowPpt
             )
         }
     }
@@ -427,7 +431,8 @@ class FilePicker(private val context: AppCompatActivity, private val application
         allowPdf: Boolean,
         allowDoc: Boolean,
         allowXCL: Boolean,
-        allowText: Boolean
+        allowText: Boolean,
+        allowPpt: Boolean
     ) {
 
         val mimeType = arrayListOf<String>()
@@ -441,6 +446,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
         if (allowDoc) mimeType.add(MIME_TYPE_DOC_DOCX)
         if (allowXCL) mimeType.add(MIME_TYPE_XLS)
         if (allowText) mimeType.add(MIME_TYPE_TEXT)
+        if (allowPpt) mimeType.add(MIME_TYPE_PPT_PPTX)
 
         // by passing arrayList will not work as mime type for that we convert the dynamic arrayList to String array and passed it..
         val type = mimeType.toTypedArray()
