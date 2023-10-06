@@ -424,6 +424,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
         ) {
             pickDocument(
                 allowImage, allowPickVideo, allowPdf, allowDoc, allowXCL,allowPPT, allowText
+
             )
         }
     }
@@ -453,6 +454,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
         if (allowText) mimeType.add(MIME_TYPE_TEXT)
         if (allowPPT) mimeType.add(MIME_TYPE_PPT_PPT)
         if (allowPPT) mimeType.add(MIME_TYPE_PPT_PPTX)
+
 
         // by passing arrayList will not work as mime type for that we convert the dynamic arrayList to String array and passed it..
         val type = mimeType.toTypedArray()
