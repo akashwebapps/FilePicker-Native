@@ -18,9 +18,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.FileProvider
 import com.andorid.filepicker.utils.Constant
+import com.andorid.filepicker.utils.Constant.MIME_TYPE_DOC_DOC
 import com.andorid.filepicker.utils.Constant.MIME_TYPE_DOC_DOCX
 import com.andorid.filepicker.utils.Constant.MIME_TYPE_PDF
+import com.andorid.filepicker.utils.Constant.MIME_TYPE_PPT_PPT
+import com.andorid.filepicker.utils.Constant.MIME_TYPE_PPT_PPTX
 import com.andorid.filepicker.utils.Constant.MIME_TYPE_TEXT
+import com.andorid.filepicker.utils.Constant.MIME_TYPE_XL
 import com.andorid.filepicker.utils.Constant.MIME_TYPE_XLS
 import com.andorid.filepicker.utils.ImageCompression
 import com.andorid.filepicker_native.utils.Exfn.Companion.openAppSystemSettings
@@ -53,6 +57,7 @@ interface ImagePickerContract {
         allowPdf: Boolean = false,
         allowDoc: Boolean = false,
         allowXCL: Boolean = false,
+        allowPPT: Boolean = false,
         allowText: Boolean = false,
         filePath: (path: String) -> Unit
     )
@@ -395,6 +400,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
         allowPdf: Boolean,
         allowDoc: Boolean,
         allowXCL: Boolean,
+        allowPPT: Boolean,
         allowText: Boolean,
         filePath: (path: String) -> Unit
     ) {
@@ -406,6 +412,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
                 allowPdf,
                 allowDoc,
                 allowXCL,
+                allowPPT,
                 allowText,
                 filePath
             )
@@ -416,7 +423,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
             )
         ) {
             pickDocument(
-                allowImage, allowPickVideo, allowPdf, allowDoc, allowXCL, allowText
+                allowImage, allowPickVideo, allowPdf, allowDoc, allowXCL,allowPPT, allowText
             )
         }
     }
@@ -427,6 +434,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
         allowPdf: Boolean,
         allowDoc: Boolean,
         allowXCL: Boolean,
+        allowPPT: Boolean,
         allowText: Boolean
     ) {
 
@@ -439,8 +447,12 @@ class FilePicker(private val context: AppCompatActivity, private val application
         if (allowPickVideo) mimeType.add("video/*")
         if (allowPdf) mimeType.add(MIME_TYPE_PDF)
         if (allowDoc) mimeType.add(MIME_TYPE_DOC_DOCX)
+        if (allowDoc) mimeType.add(MIME_TYPE_DOC_DOC)
         if (allowXCL) mimeType.add(MIME_TYPE_XLS)
+        if (allowXCL) mimeType.add(MIME_TYPE_XL)
         if (allowText) mimeType.add(MIME_TYPE_TEXT)
+        if (allowPPT) mimeType.add(MIME_TYPE_PPT_PPT)
+        if (allowPPT) mimeType.add(MIME_TYPE_PPT_PPTX)
 
         // by passing arrayList will not work as mime type for that we convert the dynamic arrayList to String array and passed it..
         val type = mimeType.toTypedArray()
