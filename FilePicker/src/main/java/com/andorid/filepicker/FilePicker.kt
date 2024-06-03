@@ -48,7 +48,8 @@ interface ImagePickerContract {
         shouldCrop: Boolean = false,
         isCropBoxOval: Boolean = false,
         cropBoxRatio: Pair<Int, Int>? = null,
-        filePath: (path: String) -> Unit
+        filePath: (path: String) -> Unit,
+        filePathUri: (uri: Uri) -> Unit,
     )
 
     fun pickFile(
@@ -101,6 +102,7 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
 
     private var onSelectedFile: ((filePath: String) -> Unit)? = null
+    private var onSelectedFileUri: ((uri: Uri) -> Unit)? = null
 
     init {
 
@@ -145,7 +147,20 @@ class FilePicker(private val context: AppCompatActivity, private val application
 
                     if (it.data?.data == null) {
                         // taken from camera
-                        pickiT?.getPath(fileUri, Build.VERSION.SDK_INT)
+                        if (shouldCrop) {
+                            cropImage.launch(options(uri = fileUri) {
+                                setGuidelines(CropImageView.Guidelines.ON)
+                                setOutputCompressFormat(Bitmap.CompressFormat.PNG)
+                                if (isCropBoxOval) setCropShape(cropShape = CropImageView.CropShape.OVAL)
+                                cropBoxRatio?.let {
+                                    setAspectRatio(it.first, it.second)
+                                }
+                            })
+
+                        } else  fileUri?.let { it1 -> onSelectedFileUri?.invoke(it1) }
+
+
+
                     } else {
                         // choosed from file manager
                         pickiT?.getPath(it.data?.data, Build.VERSION.SDK_INT)
@@ -239,8 +254,8 @@ class FilePicker(private val context: AppCompatActivity, private val application
                     return@launch
                 }
 
-                queryFileUrl =
-                    context.compressImageFile(queryFileUrl, shouldOverride = false, fileUri!!)
+              /*  queryFileUrl =
+                    context.compressImageFile(queryFileUrl, shouldOverride = false, fileUri!!)*/
 
 
             }
@@ -271,15 +286,17 @@ class FilePicker(private val context: AppCompatActivity, private val application
         shouldCrop: Boolean,
         isCropBoxOval: Boolean,
         cropBoxRatio: Pair<Int, Int>?,
-        filePath: (path: String) -> Unit
+        filePath: (path: String) -> Unit,
+        filePathUri: (uri: Uri) -> Unit,
     ) {
         permissions = Constant.camera_storage_permission
         this.shouldCrop = shouldCrop
         this.isCropBoxOval = isCropBoxOval
         this.cropBoxRatio = cropBoxRatio
         this.onSelectedFile = filePath
+        this.onSelectedFileUri = filePathUri
         currentSelection =
-            { takePhotoFromCamera(shouldCrop, isCropBoxOval, cropBoxRatio, filePath) }
+            { takePhotoFromCamera(shouldCrop, isCropBoxOval, cropBoxRatio, filePath,filePathUri) }
         if (filePickerHelper.isPermissionsAllowed(
                 permissions, true, requestCameraPermissionCode
             )
