@@ -26,7 +26,7 @@
         android:theme="@style/Theme.FilePickerNative"
         tools:targetApi="31">
 
-        <provider
+     <!--   <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileProvider"
             android:exported="false"
@@ -34,7 +34,7 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
-        </provider>
+        </provider>-->
 <!--        <provider
             android:name=".ImagePickerFileProvider"
             android:authorities="${applicationId}.provider"
